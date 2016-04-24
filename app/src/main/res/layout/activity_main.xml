@@ -14,8 +14,46 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/FriendList"
-        >
+        android:layout_below="@+id/relativeLayout">
 
     </ListView>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/relativeLayout">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/play"
+            android:text="@string/play"
+            android:onClick="PlayMusic"
+            />
+
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/stop"
+            android:text="@string/stop"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:onClick="StopMusic"
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/pause"
+            android:text="@string/pause"
+
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:onClick="PauseMusic"
+            />
+
+    </RelativeLayout>
 
 </RelativeLayout>

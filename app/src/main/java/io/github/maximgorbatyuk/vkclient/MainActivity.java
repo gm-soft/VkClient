@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     List<Audio> RecordList;
     MusicPlayer player;
+    private int Position = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +49,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //
-                playAudioRecord(RecordList.get(position));
+                player.Play(position);
+                Position = position;
+                showNotification("Start playing");
             }
         });
     }
@@ -88,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
         public void onComplete(VKResponse response) {
             super.onComplete(response);
             VKList<VKApiAudio> list = (VKList<VKApiAudio>) response.parsedModel;
+
             loadListView(list);
         }
 
@@ -118,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 ));
             }
 
-
+            player.setSource(RecordList);
             AudioAdapter adapter = new AudioAdapter(this, RecordList);
             listView.setAdapter(adapter);
         } catch (Exception ex) {
@@ -126,8 +130,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void playAudioRecord(Audio record){
-        player.Play(record);
-        showNotification(record.toString());
+    public void PlayMusic(View view) {
+        if (player == null) return;
+        player.Play(Position);
+        showNotification("Start playing");
+    }
+
+
+    public void StopMusic(View view) {
+        if (player == null) return;
+        player.Stop();
+        showNotification("Stop playing");
+    }
+
+    public void PauseMusic(View view) {
+        if (player == null) return;
+        player.Pause();
+        showNotification("Pause");
     }
 }
