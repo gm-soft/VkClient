@@ -54,6 +54,7 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
             playerService.setContext(getApplicationContext());
             serviceBound = true;
             playerService.setPosition(Position);
+            playerService.Play(Position);
         }
 
         @Override
@@ -66,14 +67,18 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
     protected void onStart() {
         super.onStart();
         if (serviceIntent == null){
-            serviceIntent = new Intent(this, PlayerService.class);
+            serviceIntent = new Intent(this,  PlayerService.class);
             bindService(serviceIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
             startService(serviceIntent);
+
         }
     }
 
     @Override
     protected void onDestroy() {
+        playerService.StopPlaying();
+        if (serviceBound)
+            unbindService(playerServiceConnection);
         stopService(serviceIntent);
         serviceIntent = null;
         super.onDestroy();

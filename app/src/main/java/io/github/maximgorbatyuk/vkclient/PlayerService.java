@@ -23,7 +23,7 @@ public class PlayerService extends Service implements
     private int                 Position = -1;
     private MediaPlayer         Player;
     private Context             context;
-    private final IBinder binder = new PlayerBinder();
+    private final IBinder binder = new PlayerBinder(this);
 
     public PlayerService() {
     }
@@ -42,7 +42,7 @@ public class PlayerService extends Service implements
 
     @Override
     public boolean onUnbind(Intent intent) {
-        StopPlaying();
+
 
         return false;
         //return super.onUnbind(intent);
@@ -52,7 +52,15 @@ public class PlayerService extends Service implements
         this.Position = pos;
     }
 
-    private void startPlaying(int position){
+    public void StopPlaying(){
+        if (Player != null){
+            Player.stop();
+            Player.release();
+            Player = null;
+        }
+    }
+
+    public void Play(int position){
         try
         {
             StopPlaying();
@@ -61,46 +69,37 @@ public class PlayerService extends Service implements
             Player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             Player.setDataSource(url);
             Player.prepareAsync();
-            /*
-            Player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
 
-                }
+            Player.setOnPreparedListener(this);
 
 
-            });
-            */
         } catch (Exception e) {
             Log.d(Constants.LOG_TAG, e.getMessage());
         }
     }
 
-    public void StopPlaying() {
-        if (Player != null) {
-            Player.stop();
-            Player.release();
-            Player = null;
-        }
+    public int getPosn(){
+        return Player.getCurrentPosition();
     }
 
-    public void PlayNext(){
-        Position++;
-        startPlaying(Position);
+    public int getDur(){
+        return Player.getDuration();
     }
 
-    public void Play(int pos){
-        if (Position != pos) {
-            Position = pos;
-            startPlaying(pos);
-        } else {
-            Player.start();
-        }
+    public boolean isPng(){
+        return Player.isPlaying();
     }
 
-    public void Pause(){
-        if (Player != null)
-            Player.pause();
+    public void pausePlayer(){
+        Player.pause();
+    }
+
+    public void seek(int posn){
+        Player.seekTo(posn);
+    }
+
+    public void go(){
+        Player.start();
     }
 
     @Override
@@ -120,7 +119,7 @@ public class PlayerService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        PlayNext();
+
     }
 
     @Override
@@ -130,12 +129,20 @@ public class PlayerService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        //Player.start();
         mp.start();
     }
 
     public class PlayerBinder extends Binder {
-        PlayerService getService(){
-            return PlayerService.this;
+        private PlayerService playerService;
+
+        public PlayerBinder(PlayerService playerService) {
+            this.playerService = playerService;
+        }
+
+        PlayerService getService() {
+            return playerService;
         }
     }
+
 }
