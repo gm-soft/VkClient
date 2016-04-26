@@ -12,3 +12,10 @@
 
 ## VK SDK
 * [Статья](https://habrahabr.ru/post/209974/) на хабре о выпуске SDK. Есть изменения, но полезная
+
+http://stackoverflow.com/questions/2961749/mediacontroller-with-mediaplayer
+http://code.tutsplus.com/tutorials/create-a-music-player-on-android-user-controls--mobile-22787
+http://stackoverflow.com/questions/2906925/how-do-i-pass-an-object-from-one-activity-to-another-on-android?lq=1
+http://stackoverflow.com/questions/8109867/array-list-of-objects-via-intent
+http://stackoverflow.com/questions/6541088/how-to-put-a-list-in-intent
+http://stackoverflow.com/questions/6435689/better-way-to-pass-data-between-activities-in-android/6437396#6437396

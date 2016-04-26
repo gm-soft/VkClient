@@ -1,9 +1,12 @@
 package io.github.maximgorbatyuk.vkclient.help;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Maxim on 24.04.2016.
  */
-public class Audio {
+public class Audio implements Parcelable {
 
     public int id;
     public String title;
@@ -30,10 +33,46 @@ public class Audio {
         this.lyrics_id  = lyrics_id;
     }
 
+    protected Audio(Parcel in) {
+        id          = in.readInt();
+        title       = in.readString();
+        artist      = in.readString();
+        duration    = in.readInt();
+        url         = in.readString();
+        lyrics_id   = in.readInt();
+    }
+
+    public static final Creator<Audio> CREATOR = new Creator<Audio>() {
+        @Override
+        public Audio createFromParcel(Parcel in) {
+            return new Audio(in);
+        }
+
+        @Override
+        public Audio[] newArray(int size) {
+            return new Audio[size];
+        }
+    };
+
     @Override
     public String toString() {
 
         return artist + ": " + title;
         //return super.toString();
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(      id);
+        dest.writeString(   title);
+        dest.writeString(   artist);
+        dest.writeInt(      duration);
+        dest.writeString(   url);
+        dest.writeInt(      lyrics_id);
     }
 }

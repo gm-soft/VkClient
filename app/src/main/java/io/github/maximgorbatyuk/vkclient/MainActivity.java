@@ -19,18 +19,17 @@ import com.vk.sdk.api.model.VKApiAudio;
 import com.vk.sdk.api.model.VKList;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import io.github.maximgorbatyuk.vkclient.help.Audio;
 import io.github.maximgorbatyuk.vkclient.help.AudioAdapter;
-import io.github.maximgorbatyuk.vkclient.help.MusicPlayer;
+import io.github.maximgorbatyuk.vkclient.help.Constants;
 import io.github.maximgorbatyuk.vkclient.secure.SecureData;
 
 public class MainActivity extends AppCompatActivity {
 
     ListView listView;
-    List<Audio> RecordList;
-    MusicPlayer player;
+    ArrayList<Audio> RecordList;
+    //MusicPlayer player;
     private int Position = 0;
 
     @Override
@@ -42,16 +41,16 @@ public class MainActivity extends AppCompatActivity {
         //System.out.println("FingerPrint = " + Arrays.asList(fingers));
 
         VKSdk.login(this, SecureData.scope);
-
-        player = new MusicPlayer(this);
         listView = (ListView) findViewById(R.id.FriendList);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //
-                player.Play(position);
+
+                startIntent(position);
+                /*player.Play(position);
                 Position = position;
-                showNotification("Start playing");
+                showNotification("Start playing");*/
             }
         });
     }
@@ -121,8 +120,6 @@ public class MainActivity extends AppCompatActivity {
                         audio.lyrics_id
                 ));
             }
-
-            player.setSource(RecordList);
             AudioAdapter adapter = new AudioAdapter(this, RecordList);
             listView.setAdapter(adapter);
         } catch (Exception ex) {
@@ -130,22 +127,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void PlayMusic(View view) {
-        if (player == null) return;
-        player.Play(Position);
-        showNotification("Start playing");
-    }
 
-
-    public void StopMusic(View view) {
-        if (player == null) return;
-        player.Stop();
-        showNotification("Stop playing");
-    }
-
-    public void PauseMusic(View view) {
-        if (player == null) return;
-        player.Pause();
-        showNotification("Pause");
+    private void startIntent(int position){
+        Intent intent = new Intent(this, PlayerActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(Constants.AUDIO_LIST, RecordList);
+        intent.putExtra(Constants.AUDIO_LIST, bundle);
+        intent.putExtra(Constants.POSITION, position);
+        startActivity(intent);
     }
 }
