@@ -3,6 +3,8 @@ package io.github.maximgorbatyuk.vkclient.help;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.vk.sdk.api.model.VKApiAudio;
+
 /**
  * Created by Maxim on 24.04.2016.
  */
@@ -15,6 +17,8 @@ public class Audio implements Parcelable {
     public String url;
     public int lyrics_id;
 
+
+
     public Audio(){
         this.id         = -1;
         this.title      = null;
@@ -22,6 +26,15 @@ public class Audio implements Parcelable {
         this.duration   = 0;
         this.url        = null;
         this.lyrics_id  = -1;
+    }
+
+    public Audio(VKApiAudio source){
+        this.id          = source.id;
+        this.title       = source.title;
+        this.artist      = source.artist;
+        this.duration    = source.duration;
+        this.url         = source.url;
+        this.lyrics_id   = source.lyrics_id;
     }
 
     public Audio(int id, String title, String artist, int duration, String url, int lyrics_id){

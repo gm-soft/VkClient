@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -17,9 +18,16 @@ import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiAudio;
 import com.vk.sdk.api.model.VKList;
+import com.vk.sdk.util.VKUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import io.github.maximgorbatyuk.vkclient.database.AddRecord;
+import io.github.maximgorbatyuk.vkclient.database.GetRecordList;
+import io.github.maximgorbatyuk.vkclient.database.IExecuteResult;
+import io.github.maximgorbatyuk.vkclient.database.IGetResult;
 import io.github.maximgorbatyuk.vkclient.help.Audio;
 import io.github.maximgorbatyuk.vkclient.help.AudioAdapter;
 import io.github.maximgorbatyuk.vkclient.help.Constants;
@@ -29,7 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
     ListView listView;
     ArrayList<Audio> RecordList;
-    //MusicPlayer player;
+    Button loginButton;
+
     private int Position = 0;
 
     @Override
@@ -40,7 +49,9 @@ public class MainActivity extends AppCompatActivity {
         //String[] fingers = VKUtil.getCertificateFingerprint(this, this.getPackageName());
         //System.out.println("FingerPrint = " + Arrays.asList(fingers));
 
-        VKSdk.login(this, SecureData.scope);
+        loginButton = (Button) findViewById(R.id.loginVK);
+
+
         listView = (ListView) findViewById(R.id.FriendList);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -53,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
                 showNotification("Start playing");*/
             }
         });
+        callRecordsInDatabase();
     }
 
     @Override
@@ -89,9 +101,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onComplete(VKResponse response) {
             super.onComplete(response);
-            VKList<VKApiAudio> list = (VKList<VKApiAudio>) response.parsedModel;
+            //VKList<VKApiAudio> list = (VKList<VKApiAudio>) response.parsedModel;
+            addListToLocalDatabase((VKList<VKApiAudio>) response.parsedModel);
 
-            loadListView(list);
+            //loadListView(list);
         }
 
         @Override
@@ -105,19 +118,18 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void loadListView(Object object){
+    private void loadListView(List<Audio> list){
         try {
-            VKList<VKApiAudio> list = (VKList<VKApiAudio>) object;
+            // VKList<VKApiAudio> list = (VKList<VKApiAudio>) object;
             RecordList = new ArrayList<>(0);
             for (int i = 0; i < list.size(); i++){
-                VKApiAudio audio = list.get(i);
                 RecordList.add(new Audio(
-                        audio.id,
-                        audio.title,
-                        audio.artist,
-                        audio.duration,
-                        audio.url,
-                        audio.lyrics_id
+                        list.get(i).id,
+                        list.get(i).title,
+                        list.get(i).artist,
+                        list.get(i).duration,
+                        list.get(i).url,
+                        list.get(i).lyrics_id
                 ));
             }
             AudioAdapter adapter = new AudioAdapter(this, RecordList);
@@ -135,5 +147,51 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(Constants.AUDIO_LIST, bundle);
         intent.putExtra(Constants.POSITION, position);
         startActivity(intent);
+    }
+
+    private void addListToLocalDatabase(VKList<VKApiAudio> list){
+
+        final Audio[] records = new Audio[list.size()];
+
+        for (int i = 0; i < list.size(); i++){
+            records[i] = new Audio( list.get(i) );
+        }
+
+        new AddRecord(this, new IExecuteResult() {
+            @Override
+            public void onExecute(int result) {
+                showNotification("Added " + result + " records");
+                loadRecordFromDatabase();
+            }
+        }).execute(records);
+    }
+
+    private void loadRecordFromDatabase() {
+        new GetRecordList(this, new IGetResult() {
+            @Override
+            public void onExecute(List<Audio> list) {
+                loadListView(list);
+            }
+        }).execute();
+    }
+
+    private void callRecordsInDatabase(){
+        new GetRecordList(this, new IGetResult() {
+            @Override
+            public void onExecute(List<Audio> list) {
+                if (list.size() > 0) {
+                    loadRecordFromDatabase();
+                    loginButton.setVisibility(View.INVISIBLE);
+                }
+                else
+                    loginButton.setVisibility(View.VISIBLE);
+                    // getVkRecords();
+            }
+        }).execute();
+    }
+
+    public void getVkRecords(View view) {
+        VKSdk.login(this, SecureData.scope);
+        loginButton.setVisibility(View.INVISIBLE);
     }
 }

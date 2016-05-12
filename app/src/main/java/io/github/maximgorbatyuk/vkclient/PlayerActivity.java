@@ -7,22 +7,32 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import io.github.maximgorbatyuk.vkclient.help.Application;
 import io.github.maximgorbatyuk.vkclient.help.Audio;
 import io.github.maximgorbatyuk.vkclient.help.Constants;
 
-public class PlayerActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
+public class PlayerActivity extends AppCompatActivity implements MediaController.MediaPlayerControl{
 
     private ArrayList<Audio>    RecordList;
     private int                 Position;
     private PlayerService       playerService;
     private Intent              serviceIntent;
     private boolean             serviceBound;
+    private Button              playButton;
+    private MediaController     controller;
+
+    private TextView titleTextView ;
+    private TextView artistTextView ;
+    private TextView timeView;
+    private TextView durationView;
 
 
     @Override
@@ -36,11 +46,23 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
             RecordList = bundle.getParcelableArrayList(Constants.AUDIO_LIST);
 
         }
-
+        playButton      = (Button)   findViewById(R.id.play_button);
+        titleTextView   = (TextView) findViewById(R.id.title_text_view);
+        artistTextView  = (TextView) findViewById(R.id.artist_text_view);
+        timeView        = (TextView) findViewById(R.id.time_view);
+        durationView    = (TextView) findViewById(R.id.duration_view);
         /*
         player = new MusicPlayer(this, RecordList);
         player.Play(Position);
         */
+    }
+
+    /**
+     *
+     */
+    private void setController(){
+        controller = new MediaController(this);
+        controller.setMediaPlayer(this);
     }
 
 
@@ -55,6 +77,8 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
             serviceBound = true;
             playerService.setPosition(Position);
             playerService.Play(Position);
+            playButton.setText("Pause");
+            fillFields();
         }
 
         @Override
@@ -70,7 +94,6 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
             serviceIntent = new Intent(this,  PlayerService.class);
             bindService(serviceIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
             startService(serviceIntent);
-
         }
     }
 
@@ -84,51 +107,69 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
         super.onDestroy();
     }
 
-    private void fillFields(int position){
+    private void fillFields(){
+        int position = playerService.GetPosition();
         Audio record = RecordList.get(position);
-        TextView titleTextView = (TextView) findViewById(R.id.title_text_view);
+
         titleTextView.setText(record.title);
-        TextView artistTextView = (TextView) findViewById(R.id.artist_text_view);
         artistTextView.setText(record.artist);
+        timeView.setText(Application.transformDuration( 0 ) );
+        durationView.setText(Application.transformDuration( record.duration ));
+    }
+
+
+    private void showNotification(String text){
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+    }
+
+
+
+    public void PlayRecord(View view) {
+        if (playerService.IsPlaying()) {
+            playButton.setText("Play");
+            playerService.Pause();
+
+        }
+        else {
+            playButton.setText("Pause");
+            playerService.Go();
+
+        }
     }
 
     @Override
     public void start() {
-        /*
-        if (player == null) return;
-        player.Play(Position);
-        fillFields(Position);
-        */
 
     }
 
     @Override
     public void pause() {
-        /*
-        if (player == null) return;
-        player.Pause();
-        */
 
     }
 
     @Override
     public int getDuration() {
-        return 0;
+        return playerService != null ? playerService.GetDuration() : 0;
+        //return 0;
     }
 
     @Override
     public int getCurrentPosition() {
-        return 0;
+
+        return serviceBound ? playerService.GetPosition() : 0;
+        //return 0;
     }
 
     @Override
     public void seekTo(int pos) {
-
+        if (playerService != null)
+            playerService.Seek(pos);
     }
 
     @Override
     public boolean isPlaying() {
-        return false;
+        return serviceBound && playerService.IsPlaying();
+        //return false;
     }
 
     @Override
@@ -138,7 +179,7 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
 
     @Override
     public boolean canPause() {
-        return false;
+        return true;
     }
 
     @Override
@@ -156,9 +197,13 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
         return 0;
     }
 
-    private void showNotification(String text){
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+    public void PlayNext(View view) {
+        playerService.PlayNext();
+        fillFields();
     }
 
-
+    public void PlayPrevious(View view) {
+        playerService.PlayPrevious();
+        fillFields();
+    }
 }

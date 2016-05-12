@@ -48,6 +48,10 @@ public class PlayerService extends Service implements
         //return super.onUnbind(intent);
     }
 
+    public MediaPlayer getPlayer() {
+        return Player;
+    }
+
     public void setPosition(int pos){
         this.Position = pos;
     }
@@ -78,28 +82,40 @@ public class PlayerService extends Service implements
         }
     }
 
-    public int getPosn(){
-        return Player.getCurrentPosition();
+    public int GetPosition(){
+        //return Player.getCurrentPosition();
+        return Position;
     }
 
-    public int getDur(){
+    public int GetDuration(){
         return Player.getDuration();
     }
 
-    public boolean isPng(){
+    public boolean IsPlaying(){
         return Player.isPlaying();
     }
 
-    public void pausePlayer(){
+    public void Pause(){
         Player.pause();
     }
 
-    public void seek(int posn){
+    public void Seek(int posn){
         Player.seekTo(posn);
     }
 
-    public void go(){
+    public void Go(){
         Player.start();
+    }
+
+    public void PlayNext(){
+        Position = Position == RecordList.size() ? 0 : Position + 1;
+        Play(Position);
+
+    }
+
+    public void PlayPrevious(){
+        Position = Position == 0 ? RecordList.size() -1 : Position - 1;
+        Play(Position);
     }
 
     @Override
@@ -108,6 +124,8 @@ public class PlayerService extends Service implements
         Position = 0;
         Player = new MediaPlayer();
     }
+
+
 
     public void setRecordList(ArrayList<Audio> source){
         this.RecordList = source;
@@ -119,17 +137,18 @@ public class PlayerService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-
+        mp.reset();
+        PlayNext();
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        mp.reset();
         return false;
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        //Player.start();
         mp.start();
     }
 

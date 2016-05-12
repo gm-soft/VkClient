@@ -5,6 +5,7 @@ import android.content.Intent;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.model.VKApiAudio;
 
 import java.util.concurrent.TimeUnit;
 
@@ -46,5 +47,16 @@ public class Application extends android.app.Application {
         String ss = seconds < 10 ? "0" + seconds : "" + seconds;
 
         return mm + ":" + ss;
+    }
+
+    public static Audio convertToAudio(VKApiAudio source){
+        Audio result = new Audio();
+        result.id          = source.id;
+        result.title       = source.title;
+        result.artist      = source.artist;
+        result.duration    = source.duration;
+        result.url         = source.url;
+        result.lyrics_id   = source.lyrics_id;
+        return result;
     }
 }
