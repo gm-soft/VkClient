@@ -203,12 +203,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadRecordFromDatabase() {
         database.getRecordList(new IExecuteResult() {
-
             @Override
             public void onExecute(int result) {
 
             }
-
             @Override
             public void onExecute(List<Audio> list) {
                 loadListView(list);
@@ -222,7 +220,6 @@ public class MainActivity extends AppCompatActivity {
             public void onExecute(int result) {
 
             }
-
             @Override
             public void onExecute(List<Audio> list) {
                 if (list.size() > 0) {

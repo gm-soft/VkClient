@@ -7,9 +7,12 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.MediaController;
+import android.widget.MediaController.MediaPlayerControl;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,8 +21,11 @@ import java.util.ArrayList;
 import io.github.maximgorbatyuk.vkclient.help.Application;
 import io.github.maximgorbatyuk.vkclient.help.Audio;
 import io.github.maximgorbatyuk.vkclient.help.Constants;
+import io.github.maximgorbatyuk.vkclient.music.IMusicPlayer;
+import io.github.maximgorbatyuk.vkclient.music.MusicController;
+import io.github.maximgorbatyuk.vkclient.music.PlayerBinder;
 
-public class PlayerActivity extends AppCompatActivity implements MediaController.MediaPlayerControl{
+public class PlayerActivity extends AppCompatActivity implements MediaPlayerControl {
 
     private ArrayList<Audio>    RecordList;
     private int                 Position;
@@ -27,12 +33,14 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
     private Intent              serviceIntent;
     private boolean             serviceBound;
     private Button              playButton;
-    private MediaController     controller;
+    private MusicController     controller;
+    private IMusicPlayer        musicPlayerInterface;
 
     private TextView titleTextView ;
     private TextView artistTextView ;
     private TextView timeView;
     private TextView durationView;
+    private MediaController mediaController;
 
 
     @Override
@@ -55,14 +63,28 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
         player = new MusicPlayer(this, RecordList);
         player.Play(Position);
         */
+        musicPlayerInterface = new IMusicPlayer() {
+            @Override
+            public void onCompletion(int currentPosition) {
+                playNext();
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                showNotification(errorMessage);
+            }
+        };
     }
 
     /**
      *
      */
     private void setController(){
-        controller = new MediaController(this);
+        controller = new MusicController(this);
         controller.setMediaPlayer(this);
+        controller.setAnchorView(findViewById(R.id.seek_bar));
+        controller.setEnabled(true);
+        controller.show();
     }
 
 
@@ -70,13 +92,13 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
     private ServiceConnection playerServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
-            playerService = binder.getService();
+            PlayerBinder binder = (PlayerBinder) service;
+            playerService       = binder.getService();
             playerService.setRecordList(RecordList);
-            playerService.setContext(getApplicationContext());
             serviceBound = true;
-            playerService.setPosition(Position);
+            playerService.setIMusicInterface(musicPlayerInterface);
             playerService.Play(Position);
+            // setController();
             playButton.setText("Pause");
             fillFields();
         }
@@ -99,17 +121,20 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         playerService.StopPlaying();
         if (serviceBound)
             unbindService(playerServiceConnection);
         stopService(serviceIntent);
         serviceIntent = null;
-        super.onDestroy();
+        // controller.hide();
+
     }
 
+
+
     private void fillFields(){
-        int position = playerService.GetPosition();
-        Audio record = RecordList.get(position);
+        Audio record = playerService.getCurrentAudio();
 
         titleTextView.setText(record.title);
         artistTextView.setText(record.artist);
@@ -139,12 +164,12 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
 
     @Override
     public void start() {
-
+        playerService.Go();
     }
 
     @Override
     public void pause() {
-
+        playerService.Pause();
     }
 
     @Override
@@ -156,7 +181,7 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
     @Override
     public int getCurrentPosition() {
 
-        return serviceBound ? playerService.GetPosition() : 0;
+        return playerService != null ? playerService.GetPosition() : 0;
         //return 0;
     }
 
@@ -168,8 +193,7 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
 
     @Override
     public boolean isPlaying() {
-        return serviceBound && playerService.IsPlaying();
-        //return false;
+        return playerService != null && playerService.IsPlaying();
     }
 
     @Override
@@ -198,11 +222,19 @@ public class PlayerActivity extends AppCompatActivity implements MediaController
     }
 
     public void PlayNext(View view) {
+        playNext();
+    }
+
+    private void playNext(){
         playerService.PlayNext();
         fillFields();
     }
 
     public void PlayPrevious(View view) {
+        playPrevious();
+    }
+
+    private void playPrevious(){
         playerService.PlayPrevious();
         fillFields();
     }

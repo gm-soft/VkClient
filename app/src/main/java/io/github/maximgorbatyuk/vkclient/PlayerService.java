@@ -3,34 +3,27 @@ package io.github.maximgorbatyuk.vkclient;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import java.util.ArrayList;
 
 import io.github.maximgorbatyuk.vkclient.help.Audio;
-import io.github.maximgorbatyuk.vkclient.help.Constants;
+import io.github.maximgorbatyuk.vkclient.music.IMusicPlayer;
+import io.github.maximgorbatyuk.vkclient.music.MusicPlayer;
+import io.github.maximgorbatyuk.vkclient.music.PlayerBinder;
 
-public class PlayerService extends Service implements
-        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnCompletionListener
-{
+public class PlayerService extends Service {
 
-    private ArrayList<Audio>    RecordList;
-    private int                 Position = -1;
-    private MediaPlayer         Player;
-    private Context             context;
+    private MusicPlayer         player;
     private final IBinder binder = new PlayerBinder(this);
 
-    public PlayerService() {
-    }
 
-    public PlayerService(Context context, ArrayList<Audio> source) {
-        this.context = context;
-        this.RecordList = source;
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        player = new MusicPlayer();
+
     }
 
     @Override
@@ -42,126 +35,62 @@ public class PlayerService extends Service implements
 
     @Override
     public boolean onUnbind(Intent intent) {
-
-
         return false;
         //return super.onUnbind(intent);
     }
 
-    public MediaPlayer getPlayer() {
-        return Player;
-    }
-
-    public void setPosition(int pos){
-        this.Position = pos;
+    public void setIMusicInterface(IMusicPlayer interfacePlayer){
+        player.setIMusicInterface(interfacePlayer);
     }
 
     public void StopPlaying(){
-        if (Player != null){
-            Player.stop();
-            Player.release();
-            Player = null;
-        }
+        player.stopPlaying();
     }
 
     public void Play(int position){
-        try
-        {
-            StopPlaying();
-            String url = RecordList.get(position).url;
-            Player = new MediaPlayer();
-            Player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            Player.setDataSource(url);
-            Player.prepareAsync();
-
-            Player.setOnPreparedListener(this);
-
-
-        } catch (Exception e) {
-            Log.d(Constants.LOG_TAG, e.getMessage());
-        }
+        player.playAudio(position);
     }
 
     public int GetPosition(){
-        //return Player.getCurrentPosition();
-        return Position;
+        return player.getCurrentPosition();
+        // return Position;
     }
 
     public int GetDuration(){
-        return Player.getDuration();
+        return player.getDuration();
     }
-
     public boolean IsPlaying(){
-        return Player.isPlaying();
+        return player.isPlaying();
     }
-
     public void Pause(){
-        Player.pause();
+        player.pause();
     }
-
     public void Seek(int posn){
-        Player.seekTo(posn);
+        player.seekTo(posn);
     }
-
     public void Go(){
-        Player.start();
+        player.resume();
     }
-
     public void PlayNext(){
-        Position = Position == RecordList.size() ? 0 : Position + 1;
-        Play(Position);
-
+        player.playNext();
     }
-
     public void PlayPrevious(){
-        Position = Position == 0 ? RecordList.size() -1 : Position - 1;
-        Play(Position);
+        player.playPrevious();
     }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Position = 0;
-        Player = new MediaPlayer();
-    }
-
-
 
     public void setRecordList(ArrayList<Audio> source){
-        this.RecordList = source;
+        player.setList(source);
     }
 
-    public void setContext(Context context){
-        this.context = context;
+    public Audio getCurrentAudio(){
+        return player.getCurrentAudio();
     }
 
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        mp.reset();
-        PlayNext();
+    public MediaPlayer getMusicPlayer(){
+        return player.getMe();
     }
 
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        mp.reset();
-        return false;
-    }
 
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        mp.start();
-    }
 
-    public class PlayerBinder extends Binder {
-        private PlayerService playerService;
-
-        public PlayerBinder(PlayerService playerService) {
-            this.playerService = playerService;
-        }
-
-        PlayerService getService() {
-            return playerService;
-        }
-    }
 
 }
