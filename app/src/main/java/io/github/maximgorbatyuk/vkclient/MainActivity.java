@@ -3,6 +3,8 @@ package io.github.maximgorbatyuk.vkclient;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -18,16 +20,12 @@ import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.model.VKApiAudio;
 import com.vk.sdk.api.model.VKList;
-import com.vk.sdk.util.VKUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import io.github.maximgorbatyuk.vkclient.database.AddRecord;
-import io.github.maximgorbatyuk.vkclient.database.GetRecordList;
+import io.github.maximgorbatyuk.vkclient.database.Database;
 import io.github.maximgorbatyuk.vkclient.database.IExecuteResult;
-import io.github.maximgorbatyuk.vkclient.database.IGetResult;
 import io.github.maximgorbatyuk.vkclient.help.Audio;
 import io.github.maximgorbatyuk.vkclient.help.AudioAdapter;
 import io.github.maximgorbatyuk.vkclient.help.Constants;
@@ -35,11 +33,11 @@ import io.github.maximgorbatyuk.vkclient.secure.SecureData;
 
 public class MainActivity extends AppCompatActivity {
 
-    ListView listView;
-    ArrayList<Audio> RecordList;
-    Button loginButton;
-
-    private int Position = 0;
+    private ListView            listView;
+    private ArrayList<Audio>    RecordList;
+    private Database            database;
+    private Button              loginButton;
+    private int                 Position = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         //System.out.println("FingerPrint = " + Arrays.asList(fingers));
 
         loginButton = (Button) findViewById(R.id.loginVK);
-
+        database = new Database(this);
 
         listView = (ListView) findViewById(R.id.FriendList);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -65,6 +63,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         callRecordsInDatabase();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        // return super.onCreateOptionsMenu(menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        switch (id){
+            case R.id.loginAction:
+                showNotification("login Action");
+                break;
+            case R.id.loginMyMusicAction:
+                showNotification("My music");
+                break;
+            case R.id.loadPopularAction:
+                showNotification("Popular Music");
+                break;
+            case R.id.loadLocalAction:
+                showNotification("Get local music Action");
+                break;
+            case R.id.syncAction:
+                showNotification("Synchronize");
+                break;
+        }
+
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -156,27 +187,42 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < list.size(); i++){
             records[i] = new Audio( list.get(i) );
         }
-
-        new AddRecord(this, new IExecuteResult() {
+        database.addRecord(records, new IExecuteResult() {
             @Override
             public void onExecute(int result) {
                 showNotification("Added " + result + " records");
                 loadRecordFromDatabase();
             }
-        }).execute(records);
+
+            @Override
+            public void onExecute(List<Audio> list) {
+
+            }
+        });
     }
 
     private void loadRecordFromDatabase() {
-        new GetRecordList(this, new IGetResult() {
+        database.getRecordList(new IExecuteResult() {
+
+            @Override
+            public void onExecute(int result) {
+
+            }
+
             @Override
             public void onExecute(List<Audio> list) {
                 loadListView(list);
             }
-        }).execute();
+        });
     }
 
     private void callRecordsInDatabase(){
-        new GetRecordList(this, new IGetResult() {
+        database.getRecordList(new IExecuteResult() {
+            @Override
+            public void onExecute(int result) {
+
+            }
+
             @Override
             public void onExecute(List<Audio> list) {
                 if (list.size() > 0) {
@@ -185,9 +231,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else
                     loginButton.setVisibility(View.VISIBLE);
-                    // getVkRecords();
+                // getVkRecords();
             }
-        }).execute();
+        });
     }
 
     public void getVkRecords(View view) {

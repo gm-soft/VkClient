@@ -4,4 +4,10 @@
     <string name="pause">Pause</string>
     <string name="stop">Stop</string>
     <integer name="com_vk_sdk_AppId">5422725</integer>
+
+    <string name="login">Log in VK</string>
+    <string name="load_my_vk_list">Load my music</string>
+    <string name="load_popular">Load popular music</string>
+    <string name="load_local">Load stored list</string>
+    <string name="sync">Sync records</string>
 </resources>
